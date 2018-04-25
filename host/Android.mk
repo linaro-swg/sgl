@@ -2,14 +2,15 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_C_INCLUDES := \
-  vendor/arm/securegadget/SecuregadgetTrustedApplication/VideoCryptoLib_TEE/include/optee/ \
+  external/sedget/ta/include/optee/ \
   external/optee_client/public \
   $(LOCAL_PATH)/include \
   $(LOCAL_PATH)/src/include
 
 LOCAL_SHARED_LIBRARIES := \
   liblog \
-  libteec
+  libteec \
+  libcutils
 
 LOCAL_SRC_FILES := \
   src/memory/protected_mem.c \
