@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 /* Opaque type of protected memory */
-typedef struct _sedget_protected_buffer sedget_protected_buffer;
+typedef void sedget_protected_buffer;
 
 /*
  * Protected memory types:
