@@ -16,20 +16,9 @@
 #include <fcntl.h>
 #include <linux/ion.h>
 #include "ion_ext.h"
+#include <cutils/native_handle.h>
 
 #include "sedget_video.h"
-
-/*
- * private structure
- */
-#define SEDGET_MAGIC    0x5347534D  /*'SGSM'*/
-struct _sedget_protected_buffer {
-	uint32_t size;		/* size of actual secure_video_buffer */
-	uint32_t magic;		/* 'SGSM' for checking if object is a
-				Secure Gadget implemetation */
-	sedget_buf_type type;	/* type of sedget buffer */
-	int mem_fd;		/* file descriptor of protected memory */
-};
 
 static int allocate_secure_buffer(size_t size, sedget_buf_type type)
 {
@@ -89,21 +78,10 @@ alloc_exit:
 		return mem_fd;
 }
 
-static void fill_prot_buf(sedget_protected_buffer * prot_buf,
-			  size_t mem_size,
-			  sedget_buf_type type,
-			  int mem_fd)
-{
-	prot_buf->size = mem_size;
-	prot_buf->magic = SEDGET_MAGIC;
-	prot_buf->type = type;
-	prot_buf->mem_fd = mem_fd;
-}
-
 sedget_protected_buffer *sedget_alloc_prot_buf(size_t mem_size,
 					       sedget_buf_type type)
 {
-	sedget_protected_buffer *prot_buf = NULL;
+	native_handle_t *native_h = native_handle_create(1, 0);
 	int mem_fd = -1;
 
 	if (type < SEDGET_BUF_INPUT || type > SEDGET_BUF_FIRMWARE){
@@ -111,42 +89,38 @@ sedget_protected_buffer *sedget_alloc_prot_buf(size_t mem_size,
 		return NULL;
 	}
 
+	if (!native_h) {
+		ALOGE("%s: failed to create native handle", __FUNCTION__);
+		return NULL;
+	}
+
 	mem_fd = allocate_secure_buffer(mem_size, type);
 	if(mem_fd >= 0) {
-		prot_buf = (sedget_protected_buffer *)malloc(
-					sizeof(sedget_protected_buffer));
-		if (prot_buf)
-			fill_prot_buf(prot_buf, mem_size, type, mem_fd);
-		else
-			close(mem_fd);
+		native_h->data[0] = mem_fd;
 	}
 out:
-	return prot_buf;
+	return native_h;
 }
 
 int sedget_free_prot_buf(sedget_protected_buffer *prot_buf)
 {
-	if(NULL == prot_buf || SEDGET_MAGIC != prot_buf->magic) {
+	if(NULL == prot_buf) {
 		ALOGE("%s Not a sedget memory object", __FUNCTION__);
 		return -EINVAL;
 	}
 
-	if(prot_buf->mem_fd >= 0) {
-		close(prot_buf->mem_fd);
-		prot_buf->mem_fd = -1;
-	}
-
-	free(prot_buf);
+	native_handle_close((native_handle_t *)prot_buf);
+	native_handle_delete((native_handle_t *)prot_buf);
 
 	return 0;
 }
 
 int sedget_get_mem_fd(sedget_protected_buffer *prot_buf)
 {
-	if(NULL == prot_buf || SEDGET_MAGIC != prot_buf->magic) {
+	if(NULL == prot_buf) {
 		ALOGE("%s Not a sedget memory object", __FUNCTION__);
 		return -EINVAL;
 	}
 
-	return prot_buf->mem_fd;
+	return ((native_handle_t *)prot_buf)->data[0];
 }
