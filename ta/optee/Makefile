@@ -4,6 +4,4 @@ PTA_PATH=
 
 include $(TA_DEV_KIT_DIR)/mk/ta_dev_kit.mk
 
-ifeq ($(CFG_CACHE_API),y)
 CFLAGS += -DCFG_CACHE_API=y
-endif
