@@ -9,7 +9,7 @@
 #include <tee_internal_api.h>
 #include <tee_ta_api.h>
 #include <trace.h>
-#include <sdp_pa.h>
+#include <sdp_pta.h>
 
 #include "sedget_video_ta.h"
 #include "mve_fw_mmu.h"
@@ -143,7 +143,7 @@ static TEE_Result decrypt_video_firmware(void *srcdata, size_t srclen,
 static uint8_t *get_phys_address(TEE_Param *param)
 {
 	TEE_Result rc;
-	TEE_UUID pta_uuid = PTA_SDP_PA_UUID;
+	TEE_UUID pta_uuid = PTA_SDP_PTA_UUID;
 	TEE_TASessionHandle sess = TEE_HANDLE_NULL;
 	uint32_t param_types;
 	TEE_Param p[TEE_NUM_PARAMS];
@@ -164,7 +164,7 @@ static uint8_t *get_phys_address(TEE_Param *param)
 	}
 
 	/* LIMIT: current mve mmu cares for 32bit address */
-	return (uint8_t *)(uintptr_t)p[1].value.a;
+	return (uint8_t *)((uintptr_t)p[1].value.a << 32 | p[1].value.b);
 }
 
 /*
