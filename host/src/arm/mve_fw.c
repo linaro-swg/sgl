@@ -155,7 +155,7 @@ sedget_protected_buffer *sedget_load_prot_firmware(const char *role,
 		goto error_out;
 	}
 
-	ALOGD("Secure Firmware loaded with size: %d", out_size);
+	ALOGD("Secure Firmware loaded with size: %zu", out_size);
 
 	return prot_buf;
 
